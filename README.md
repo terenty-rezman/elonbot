@@ -1,4 +1,4 @@
-> __NOTE__: work in progress\
+> __NOTE__: work in progress
 
 1) create python virtual environmet:
 
