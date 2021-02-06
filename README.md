@@ -1,6 +1,6 @@
 > __NOTE__: work in progress
 
-1) create python virtual environmet:
+1) create python virtual environment:
 
 ```
 $ python3 -m venv venv
