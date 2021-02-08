@@ -1,5 +1,8 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
+var latinize = require('latinize');
+
+const keywords = require("./keywords");
 
 async function start_browser() {
     try {
@@ -44,7 +47,10 @@ async function scrap_tweets(target_url, user_id) {
                     // body can only be access for non-redirect responses
                     const response_body = await response.buffer();
                     const json_str = response_body.toString('utf8');
+
                     tweets = JSON.parse(json_str).globalObjects.tweets;
+                    // from obj to array
+                    tweets = Object.entries(tweets);
                 }
             }
         });
@@ -60,13 +66,31 @@ async function scrap_tweets(target_url, user_id) {
     return tweets;
 }
 
+function filter_tweets_keywords(tweets, keywords) {
+    return tweets.filter(([id, tweet]) => {
+        const text = tweet.full_text;
+        const latinized = latinize(text);
+        const lowered = latinized.toLowerCase();
+
+        for(let keyword of keywords) {
+            if (lowered.includes(keyword))
+                return true;
+        }
+
+        return false;
+    })
+}
+
 async function main() {
     const target_url = "https://twitter.com/elonmusk";
     const target_user_id = "44196397";
 
     const tweets = await scrap_tweets(target_url, target_user_id);
+    const sorted_tweets = tweets.sort(([id_a, tweet_a], [id_b, tweet_b]) => id_b.localeCompare(id_a));
+    const interest_tweets = filter_tweets_keywords(sorted_tweets, keywords.list);
 
-    await fs.writeFile("tweets.json", JSON.stringify(tweets), "utf8");
+    await fs.writeFile("tweets.json", JSON.stringify(interest_tweets), "utf8");
+
     console.log("saved to 'tweets.json'");
     console.log("done");
 }
