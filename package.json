@@ -1,0 +1,23 @@
+{
+  "name": "elonbot",
+  "version": "1.0.0",
+  "description": "> __NOTE__: work in progress",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/terenty-rezman/elonbot.git"
+  },
+  "author": "terenty.rezman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/terenty-rezman/elonbot/issues"
+  },
+  "homepage": "https://github.com/terenty-rezman/elonbot#readme",
+  "dependencies": {
+    "puppeteer": "^7.0.1"
+  }
+}
