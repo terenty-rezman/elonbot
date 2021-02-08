@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
-var latinize = require('latinize');
+const latinize = require('latinize');
 
 const keywords = require("./keywords");
 
@@ -87,7 +87,7 @@ async function main() {
 
     const tweets = await scrap_tweets(target_url, target_user_id);
     const sorted_tweets = tweets.sort(([id_a, tweet_a], [id_b, tweet_b]) => id_b.localeCompare(id_a));
-    const interest_tweets = filter_tweets_keywords(sorted_tweets, keywords.list);
+    const interest_tweets = filter_tweets_keywords(sorted_tweets, keywords);
 
     await fs.writeFile("tweets.json", JSON.stringify(interest_tweets), "utf8");
 
