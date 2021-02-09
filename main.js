@@ -20,9 +20,8 @@ async function start_browser() {
     }
 }
 
-async function scrap_tweets(user_screen_name) {
+async function scrap_tweets(browser, user_screen_name) {
     const target_url = `https://twitter.com/${user_screen_name}`;
-    const browser = await start_browser();
     const paused_requests = [];
     let paused = false;
     let abort_next = false;
@@ -42,12 +41,6 @@ async function scrap_tweets(user_screen_name) {
                 req.abort(); // optimization: drop everything but tweets requests
         });
     }
-
-    if(!browser) {
-        console.log("no browser instance -> stop");
-        return;
-    }
-    console.log("browser instance ok");
 
     try {
         const page = await browser.newPage();
@@ -84,7 +77,7 @@ async function scrap_tweets(user_screen_name) {
                 const response_body = await response.buffer();
                 const json_str = response_body.toString('utf8');
 
-                user_rest_id = JSON.parse(json_str).data.user.rest_id;
+                user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
                 resume_requests();
             }
 
@@ -108,12 +101,13 @@ async function scrap_tweets(user_screen_name) {
 
         console.log("visiting url: ", target_url);
         await page.goto(target_url, { waitUntil: 'networkidle0' });
+
+        await page.close();
     }
     catch(err) {
         console.log("some error:", err);
     }
 
-    await browser.close();
     return tweets;
 }
 
@@ -132,19 +126,32 @@ function filter_tweets_keywords(tweets, keywords) {
     })
 }
 
-async function main() {
-    const user_name = "elonmusk";
-    
+async function tweets_to_file(browser, twitter_user_name) {
     let start = new Date();
-    const tweets = await scrap_tweets(user_name);
-    console.log("scrap time", new Date() - start, "ms");
 
+    const tweets = await scrap_tweets(browser, twitter_user_name);
     const sorted_tweets = tweets.sort(([id_a, tweet_a], [id_b, tweet_b]) => id_b.localeCompare(id_a));
     const interest_tweets = filter_tweets_keywords(sorted_tweets, keywords);
+    await fs.writeFile(`${twitter_user_name}_tweets.json`, JSON.stringify(interest_tweets), "utf8");
 
-    await fs.writeFile("tweets.json", JSON.stringify(interest_tweets), "utf8");
+    console.log(`saved to '${twitter_user_name}_tweets.json'`);
+    console.log("scrap time", new Date() - start, "ms");
+}
 
-    console.log("saved to 'tweets.json'");
+async function main() {
+    const user_names = ["trump", "elonmusk"];
+    const browser = await start_browser();
+
+    if(!browser) {
+        console.log("no browser instance -> stop");
+        return;
+    }
+    console.log("browser instance ok");
+
+    await Promise.all(user_names.map(name => tweets_to_file(browser, name)));
+
+    await browser.close();
+
     console.log("done");
 }
 
