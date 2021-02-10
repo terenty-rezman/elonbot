@@ -19,6 +19,7 @@
   "homepage": "https://github.com/terenty-rezman/elonbot#readme",
   "dependencies": {
     "latinize": "^0.5.0",
-    "puppeteer": "^7.0.1"
+    "puppeteer": "^7.0.1",
+    "telegraf": "^4.0.3"
   }
 }
