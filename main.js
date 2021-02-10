@@ -1,17 +1,8 @@
-const fs = require("fs").promises;
 const watchlist = require("./watchlist");
 const latinize = require("latinize");
 const twitter = require("./twitter_scrapper");
-
-// time measure decorator
-function measure_time(f) {
-    return async function () {
-        let start = new Date();
-        const result = await f.apply(this, arguments);
-        console.log(`'${f.name}()' executed for`, new Date() - start, "ms");
-        return result;
-    }
-}
+const telegram = require("./telegram");
+const { measure_time, sleep, sleep_random, start_timer } = require("./helper");
 
 function filter_tweets_keywords(tweets, keywords) {
     return tweets.filter(([id, tweet]) => {
@@ -28,48 +19,80 @@ function filter_tweets_keywords(tweets, keywords) {
     })
 }
 
-async function tweets_to_file(twitter_user_name) {
+async function tweets_to_telegram(twitter_user_name) {
     const tweets = await twitter.scrap_tweets(twitter_user_name);
     const sorted_tweets = tweets.sort(([id_a, tweet_a], [id_b, tweet_b]) => id_b.localeCompare(id_a));
     const interest_tweets = filter_tweets_keywords(sorted_tweets, watchlist.keywords);
 
-    // save tweets of interest to file
-    await fs.mkdir("./tweets", { recursive: true });
-    await fs.writeFile(`./tweets/${twitter_user_name}_tweets.json`, JSON.stringify(interest_tweets), "utf8");
+    // send tweets of interest to telegram 
+    for (let [id, tweet] of interest_tweets) {
+        const link = `https://twitter.com/${twitter_user_name}/status/${id}`;
+        const msg = `<a>${link}</a>`;
 
-    console.log(`saved to '${twitter_user_name}_tweets.json'`);
+        const result = await telegram.send_message(msg);
+        let a = 9;
+        a++;
+    }
 }
 
 // measure tweets scrap time
-tweets_to_file = measure_time(tweets_to_file);
+//tweets_to_telegram = measure_time(tweets_to_telegram);
+
+async function bot_loop() {
+    const user_names = watchlist.users;
+    const repeat_interval = 60 * 1000; // ms
+
+    while (true) { // cycle forever
+        try {
+            const elapsed = start_timer();
+
+            for (let user of user_names) {
+                try {
+                    await tweets_to_telegram(user);
+                }
+                catch (err) {
+                    console.log(err);
+                }
+                await sleep_random(500, 4000); // counter twitter anti bot protecton
+            }
+
+            // sleep for some time
+            await sleep(repeat_interval - elapsed());
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+}
 
 async function main() {
-    const user_names = watchlist.users;
-
     try {
         await twitter.startup();
+        await telegram.startup();
+
+        await bot_loop();
     }
     catch (err) {
         console.log(err);
-        return;
     }
+    finally {
+        await telegram.shutdown();
+        await twitter.shutdown();
+    }
+}
 
-    const results = await Promise.allSettled(user_names.map(name => tweets_to_file(name)));
-
-    // report errors if any
-    const failed = results.filter(promise => promise.status === "rejected");
-    failed.forEach(element => {
-        console.log("error:", element.reason);
-    });
-
-    await twitter.shutdown();
-
-    console.log("done");
+function cleanup() {
+    telegram.shutdown();
+    twitter.shutdown();
 }
 
 // handle the unhandled
 process.on('unhandledRejection', function (err) {
     console.log(err);
 });
+
+// Enable graceful stop
+process.once('SIGINT', cleanup);
+process.once('SIGTERM', cleanup);
 
 main();
