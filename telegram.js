@@ -51,3 +51,7 @@ module.exports.shutdown = function (reason = 'unspecified') {
 module.exports.send_message = async function (text) {
     return bot.telegram.sendMessage(auth.private_group_id, text, { parse_mode: 'HTML' });
 }
+
+module.exports.notify_admin = async function (text) {
+    return bot.telegram.sendMessage(auth.admin_chat_id, text, { parse_mode: 'HTML' });
+}
