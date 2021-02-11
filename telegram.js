@@ -19,9 +19,35 @@ const auth = (
 
 let bot = new telegraf.Telegraf(auth.token);
 
+// monkeypatch handleUpdates with my own [could break with new Telegraf version]
+const original_handleUpdates = bot.handleUpdates;
+
+// process only last message per chat
+const my_handleUpdates = function(updates) {
+    // store id only for most recent update per chat
+    // updates comes sorted from older to newer
+    const most_recent_updates = new Map();
+
+    updates.forEach(update => {
+        most_recent_updates.set(update.message.chat.id, update.update_id);
+    });
+
+    const most_recent_ids = new Set(most_recent_updates.values());
+
+    const one_update_per_chat = updates.filter(update => most_recent_ids.has(update.update_id));
+
+    return original_handleUpdates.call(bot, one_update_per_chat);
+}
+
+bot.handleUpdates = my_handleUpdates;
+
+function is_admin(chat_id) {
+    return chat_id === auth.admin_chat_id;
+}
+
 bot.on('message', async (ctx) => {
     // ignore all chats except owner
-    if (ctx.message.chat.id !== auth.admin_chat_id) {
+    if (is_admin(ctx.message.chat.id) === false) {
         ctx.telegram.sendMessage(ctx.message.chat.id, `online`);
         return;
     }
@@ -41,7 +67,7 @@ bot.on('group_chat_created', (ctx) => {
 })
 
 module.exports.startup = function () {
-    return bot.launch();
+    return bot.launch({allowedUpdates: 'message'});
 }
 
 module.exports.shutdown = function (reason = 'unspecified') {

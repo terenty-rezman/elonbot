@@ -2,6 +2,7 @@ const watchlist = require("./watchlist");
 const latinize = require("latinize");
 const twitter = require("./twitter_scrapper");
 const telegram = require("./telegram");
+const db = require("./db");
 const { measure_time, sleep, sleep_random, start_timer } = require("./helper");
 
 function filter_tweets_keywords(tweets, keywords) {
@@ -21,17 +22,35 @@ function filter_tweets_keywords(tweets, keywords) {
 
 async function tweets_to_telegram(twitter_user_name) {
     const tweets = await twitter.scrap_tweets(twitter_user_name);
-    const sorted_tweets = tweets.sort(([id_a, tweet_a], [id_b, tweet_b]) => id_b.localeCompare(id_a));
-    const interest_tweets = filter_tweets_keywords(sorted_tweets, watchlist.keywords);
+    // sort so older tweets go first
+    const sorted_tweets = tweets.sort(([id_a, tweet_a], [id_b, tweet_b]) => -id_b.localeCompare(id_a));
 
-    // send tweets of interest to telegram 
-    for (let [id, tweet] of interest_tweets) {
-        const link = `https://twitter.com/${twitter_user_name}/status/${id}`;
-        const msg = `<a>${link}</a>`;
+    const db_last_tweet_id = await db.last_tweet_id(twitter_user_name);
 
-        const result = await telegram.send_message(msg);
-        let a = 9;
-        a++;
+    if (!db_last_tweet_id) { // we don't have id stored -> its our first run
+        // store last tweet id in db and dont send anything to telegram
+        // we'll be monitoring new tweets from now
+        const last_tweet_id = sorted_tweets.pop();
+        if (last_tweet_id)
+            db.set_last_tweet_id(twitter_user_name, last_tweet_id);
+    }
+    else { // we have last tweet id stored -> so we process only new tweets with id > stored_id
+        const new_tweets = sorted_tweets.filter(([id, tweet]) => id.localeCompare(db_last_tweet_id) > 0);
+        const interest_tweets = filter_tweets_keywords(new_tweets, watchlist.keywords);
+
+        let last_sent_id = undefined;
+        // send tweets of interest to telegram 
+        for (let [id, tweet] of interest_tweets) {
+            const link = `https://twitter.com/${twitter_user_name}/status/${id}`;
+            const msg = `<a>${link}</a>`;
+
+            const result = await telegram.send_message(msg);
+            last_sent_id = id;
+        }
+
+        const last_tweet_id = last_sent_id || new_tweets.pop();
+        if (last_tweet_id)
+            db.set_last_tweet_id(twitter_user_name, last_tweet_id);
     }
 }
 
