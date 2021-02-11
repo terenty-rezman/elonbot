@@ -62,10 +62,6 @@ bot.on('message', async (ctx) => {
     console.log(`msg from chat_id = ${ctx.message.chat.id}`);
 })
 
-bot.on('group_chat_created', (ctx) => {
-    ctx.telegram.sendMessage(ctx.message.chat.id, `thank you`);
-})
-
 module.exports.startup = function () {
     return bot.launch({allowedUpdates: 'message'});
 }

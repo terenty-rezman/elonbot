@@ -85,9 +85,12 @@ async function bot_loop() {
 }
 
 async function main() {
+    console.log(`${new Date()} starting elonbot...`);
+
     try {
         await twitter.startup();
         await telegram.startup();
+        console.log(`online`);
 
         await bot_loop();
     }
