@@ -9,7 +9,7 @@ const auth = (
             admin_chat_id: 0
         }
 
-        const auth_file = 'telegram_auth.json';
+        const auth_file = './auth/telegram_auth.json';
         if (fs.existsSync(auth_file)) {
             result = JSON.parse(fs.readFileSync(auth_file));
         }

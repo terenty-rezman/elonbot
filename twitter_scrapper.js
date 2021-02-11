@@ -86,7 +86,7 @@ async function scrap_tweets(browser, user_screen_name) {
             resume_requests();
     });
 
-    console.log("visiting url: ", target_url);
+    // console.log("visiting url: ", target_url);
     await page.goto(target_url, { waitUntil: 'networkidle0' });
 
     await page.close();

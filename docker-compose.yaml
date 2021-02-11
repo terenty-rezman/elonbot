@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+        elonbot:
+                build: .
+                volumes:
+                        - ./log:/usr/src/elonbot/log
+                        - ./auth:/usr/src/elonbot/auth:ro
+                restart: always

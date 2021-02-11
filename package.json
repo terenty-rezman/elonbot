@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node main.js",
-    "docker": "node main.js 2>&1 | tee -a log/elonbot.log"
+    "docker": "node main.js 2>&1 | tee -a ./log/elonbot.log"
   },
   "repository": {
     "type": "git",
