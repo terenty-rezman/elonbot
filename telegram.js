@@ -14,6 +14,9 @@ const auth = (
         if (fs.existsSync(auth_file)) {
             result = JSON.parse(fs.readFileSync(auth_file));
         }
+
+        console.log("auth", JSON.stringify(result));
+
         return result;
     }
 )();

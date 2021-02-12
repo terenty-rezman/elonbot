@@ -3,4 +3,5 @@ node_modules
 .dockerignore
 .vscode
 
-auth/telegram_auth.json
+auth/
+log/

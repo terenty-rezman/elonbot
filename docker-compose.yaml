@@ -3,6 +3,9 @@ services:
         elonbot:
                 build: .
                 volumes:
-                        - ./log:/usr/src/elonbot/log
+                        - ./log:/usr/src/elonbot/log:z
                         - ./auth:/usr/src/elonbot/auth:ro
                 restart: always
+                init: true
+                cap_add:
+                        - SYS_ADMIN
