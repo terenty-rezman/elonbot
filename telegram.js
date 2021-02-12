@@ -1,5 +1,6 @@
 const telegraf = require('telegraf');
 const fs = require('fs');
+const stats = require('./stats');
 
 const auth = (
     () => {
@@ -55,6 +56,12 @@ bot.on('message', async (ctx) => {
     const command = ctx.message.text.toLowerCase();
 
     switch (command) {
+        case 'stat':
+        case 'stats':
+        case 'info':
+            const stats_str = `uptime: ${stats.uptime_str()};\nscraps count: ${stats.scrap_count};\nfailed scraps: ${stats.failed_scrap_count}`;
+            ctx.telegram.sendMessage(ctx.message.chat.id, stats_str);
+            break;
         default:
             ctx.telegram.sendMessage(ctx.message.chat.id, `online`);
     }

@@ -4,6 +4,7 @@ const twitter = require("./twitter_scrapper");
 const telegram = require("./telegram");
 const db = require("./db");
 const { measure_time, sleep, sleep_random, start_timer } = require("./helper");
+const stats = require("./stats");
 
 function filter_tweets_keywords(tweets, keywords) {
     return tweets.filter(([id, tweet]) => {
@@ -59,15 +60,18 @@ async function tweets_to_telegram(twitter_user_name) {
 
 async function bot_loop() {
     const user_names = watchlist.users;
-    const repeat_interval = 60 * 1000; // ms
+    const scrap_interval = 60 * 1000; // ms
+    const browser_restart_interval = 20 * 60 * 1000; // ms
+    let browser_elapsed = start_timer();
 
     while (true) { // cycle forever
         try {
-            const elapsed = start_timer();
+            const scrap_elapsed = start_timer();
 
             for (let user of user_names) {
                 try {
                     await tweets_to_telegram(user);
+                    stats.scrap_count++;
                 }
                 catch (err) {
                     console.log(err);
@@ -75,8 +79,14 @@ async function bot_loop() {
                 await sleep_random(500, 4000); // counter twitter anti bot protecton
             }
 
+            // restart browser periodically to prevent chrome from eating all the memory
+            if(browser_elapsed() > browser_restart_interval) {
+                await twitter.restart_browser();
+                browser_elapsed = start_timer();
+            }
+
             // sleep for some time
-            await sleep(repeat_interval - elapsed());
+            await sleep(scrap_interval - scrap_elapsed());
         }
         catch (err) {
             console.log(err);
@@ -117,4 +127,4 @@ process.on('unhandledRejection', function (err) {
 process.once('SIGINT', cleanup);
 process.once('SIGTERM', cleanup);
 
-main();
+//main();

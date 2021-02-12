@@ -1,4 +1,3 @@
-
 function rand_int(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -33,4 +32,10 @@ function start_timer() {
     }
 }
 
-module.exports = {rand_int, measure_time, sleep, sleep_random, start_timer};
+module.exports = {
+    rand_int,
+    measure_time, 
+    sleep, 
+    sleep_random, 
+    start_timer
+};

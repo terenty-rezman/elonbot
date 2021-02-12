@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
 const telegram = require('./telegram');
+const stats = require('./stats');
+const { sleep } = require('./helper');
 
 let browser = null;
 
@@ -61,6 +63,7 @@ async function scrap_tweets(browser, user_screen_name) {
 
             user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
             if (!user_rest_id) {
+                stats.failed_scrap_count++;
                 console.log(`warning: nonexistent twitter account:`, user_screen_name);
                 telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
             }
@@ -88,14 +91,13 @@ async function scrap_tweets(browser, user_screen_name) {
 
     // console.log("visiting url: ", target_url);
     await page.goto(target_url, { waitUntil: 'networkidle0' });
-
     await page.close();
     return tweets;
 }
 
-module.exports.startup = async function () {
+async function startup() {
     if (browser)
-        throw("error: twitter_scrapper already initialized !! ");
+        throw ("error: twitter_scrapper already initialized !! ");
 
     browser = await puppeteer.launch({
         headless: true,
@@ -106,18 +108,26 @@ module.exports.startup = async function () {
     return browser;
 }
 
-module.exports.shutdown = async function () {
+function shutdown() {
     return browser.close();
 }
 
-module.exports.scrap_tweets = async function (user_screen_name) {
-    if(!browser)
-        throw("error: twitter_scrapper should be initialized with startup() before use !!")
-        
-    try {
+module.exports = {
+    startup,
+    shutdown,
+
+    restart_browser: async function () {
+        await shutdown();
+        browser = null;
+        await sleep(5000); // give some time for chrome to clean up memory just in case
+        return startup();
+    },
+
+    scrap_tweets: async function (user_screen_name) {
+        if (!browser)
+            throw ("error: twitter_scrapper should be initialized with startup() before use !!")
+
         return await scrap_tweets(browser, user_screen_name);
     }
-    catch (err) {
-        throw (err);
-    }
 }
+
