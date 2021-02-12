@@ -11,11 +11,10 @@ const auth = (
         }
 
         const auth_file = './auth/telegram_auth.json';
-        if (fs.existsSync(auth_file)) {
+        if (fs.existsSync(auth_file))
             result = JSON.parse(fs.readFileSync(auth_file));
-        }
-
-        console.log("auth", JSON.stringify(result));
+        else
+            console.log('warning: telegram auth file not found:', auth_file);
 
         return result;
     }
@@ -62,8 +61,7 @@ bot.on('message', async (ctx) => {
         case 'stat':
         case 'stats':
         case 'info':
-            const stats_str = `uptime: ${stats.uptime_str()};\nscraps count: ${stats.scrap_count};\nfailed scraps: ${stats.failed_scrap_count}`;
-            ctx.telegram.sendMessage(ctx.message.chat.id, stats_str);
+            ctx.telegram.sendMessage(ctx.message.chat.id, stats.report(), { parse_mode: 'HTML' });
             break;
         default:
             ctx.telegram.sendMessage(ctx.message.chat.id, `online`);

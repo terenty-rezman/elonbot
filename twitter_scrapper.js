@@ -5,6 +5,13 @@ const { sleep } = require('./helper');
 
 let browser = null;
 
+// tweeter page makes 2 requests (that are interesting for us) to download tweets:
+// 1st one - request to UserByScreenName - to request user id provided with user screen name
+// and 2nd one - request to {user id}.json - actual request to download most recent 20 tweets
+// so below we intercept the 1st request first to find out user_id while pausing all subsequent requests
+// in order to receive responce with user id first and to be able to resolve the second request interception url path {user id}.json
+// and then we intercept request to {user id}.json to intercept tweets list in json format
+// all the subsequent request are dropped as being unnecessary
 async function scrap_tweets(browser, user_screen_name) {
     const target_url = `https://twitter.com/${user_screen_name}`;
     const paused_requests = [];
@@ -25,6 +32,8 @@ async function scrap_tweets(browser, user_screen_name) {
             else
                 req.abort(); // optimization: drop everything but tweets requests
         });
+
+        paused_requests.splice(0, paused_requests.length);
     }
 
     const page = await browser.newPage();
@@ -64,8 +73,8 @@ async function scrap_tweets(browser, user_screen_name) {
             user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
             if (!user_rest_id) {
                 stats.failed_scrap_count++;
-                console.log(`warning: nonexistent twitter account:`, user_screen_name);
-                telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
+                console.log(`warning: nonexistent twitter account:`, user_screen_name, new Date());
+                //telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
             }
 
             resume_requests();

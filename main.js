@@ -120,11 +120,12 @@ function cleanup() {
 
 // handle the unhandled
 process.on('unhandledRejection', function (err) {
-    console.log(err);
+    console.log(new Date(), err);
+    stats.unhandled_exceptions_count++;
 });
 
 // Enable graceful stop
 process.once('SIGINT', cleanup);
 process.once('SIGTERM', cleanup);
 
-//main();
+main();
