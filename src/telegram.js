@@ -1,6 +1,7 @@
 const telegraf = require('telegraf');
 const fs = require('fs');
 const stats = require('./stats');
+const log = require('./log');
 
 const auth = (
     () => {
@@ -14,7 +15,7 @@ const auth = (
         if (fs.existsSync(auth_file))
             result = JSON.parse(fs.readFileSync(auth_file));
         else
-            console.log('warning: telegram auth file not found:', auth_file);
+            log.log('warning: telegram auth file not found:', auth_file);
 
         return result;
     }
@@ -67,7 +68,7 @@ bot.on('message', async (ctx) => {
             ctx.telegram.sendMessage(ctx.message.chat.id, `online`);
     }
 
-    console.log(`msg from chat_id = ${ctx.message.chat.id}`);
+    log.log(`msg from chat_id = ${ctx.message.chat.id}`);
 })
 
 module.exports.startup = function () {

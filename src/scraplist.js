@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-const watchlist = (
+const scraplist = (
     () => {
-        const content = fs.readFileSync('./watchlist.json', 'utf8');
+        const content = fs.readFileSync('./scraplist.json', 'utf8');
         const wlist = JSON.parse(content);
 
         return {
@@ -12,4 +12,4 @@ const watchlist = (
     }
 )();
 
-module.exports = watchlist;
+module.exports = scraplist;

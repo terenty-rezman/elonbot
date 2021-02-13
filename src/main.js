@@ -1,10 +1,11 @@
-const watchlist = require("./watchlist");
+const scraplist = require("./scraplist");
 const latinize = require("latinize");
 const twitter = require("./twitter_scrapper");
 const telegram = require("./telegram");
 const db = require("./db");
 const { measure_time, sleep, sleep_random, start_timer } = require("./helper");
 const stats = require("./stats");
+const log = require("./log");
 
 function filter_tweets_keywords(tweets, keywords) {
     return tweets.filter(([id, tweet]) => {
@@ -37,7 +38,7 @@ async function tweets_to_telegram(twitter_user_name) {
     }
     else { // we have last tweet id stored -> so we process only new tweets with id > stored_id
         const new_tweets = sorted_tweets.filter(([id, tweet]) => id.localeCompare(db_last_tweet_id) > 0);
-        const interest_tweets = filter_tweets_keywords(new_tweets, watchlist.keywords);
+        const interest_tweets = filter_tweets_keywords(new_tweets, scraplist.keywords);
 
         let last_sent_id = undefined;
         // send tweets of interest to telegram 
@@ -59,7 +60,7 @@ async function tweets_to_telegram(twitter_user_name) {
 //tweets_to_telegram = measure_time(tweets_to_telegram);
 
 async function bot_loop() {
-    const user_names = watchlist.users;
+    const user_names = scraplist.users;
     const scrap_interval = 60 * 1000; // ms
     const browser_restart_interval = 20 * 60 * 1000; // ms
     let browser_elapsed = start_timer();
@@ -74,7 +75,7 @@ async function bot_loop() {
                     stats.scrap_count++;
                 }
                 catch (err) {
-                    console.log(err);
+                    log.log(err);
                 }
                 await sleep_random(500, 4000); // counter twitter anti bot protecton
             }
@@ -89,23 +90,23 @@ async function bot_loop() {
             await sleep(scrap_interval - scrap_elapsed());
         }
         catch (err) {
-            console.log(err);
+            log.log(err);
         }
     }
 }
 
 async function main() {
-    console.log(`${new Date()} starting elonbot...`);
+    log.log(`starting elonbot...`);
 
     try {
         await twitter.startup();
         await telegram.startup();
-        console.log(`online`);
+        log.log(`online`);
 
         await bot_loop();
     }
     catch (err) {
-        console.log(err);
+        log.log(err);
     }
     finally {
         await telegram.shutdown();
@@ -120,7 +121,7 @@ function cleanup() {
 
 // handle the unhandled
 process.on('unhandledRejection', function (err) {
-    console.log(new Date(), err);
+    log.log(err);
     stats.unhandled_exceptions_count++;
 });
 

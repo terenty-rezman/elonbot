@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const telegram = require('./telegram');
 const stats = require('./stats');
 const { sleep } = require('./helper');
+const log = require('./log');
 
 let browser = null;
 
@@ -73,7 +74,7 @@ async function scrap_tweets(browser, user_screen_name) {
             user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
             if (!user_rest_id) {
                 stats.failed_scrap_count++;
-                console.log(`warning: nonexistent twitter account:`, user_screen_name, new Date());
+                log.log(`warning: nonexistent twitter account:`, user_screen_name, new Date());
                 //telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
             }
 
@@ -98,7 +99,7 @@ async function scrap_tweets(browser, user_screen_name) {
             resume_requests();
     });
 
-    // console.log("visiting url: ", target_url);
+    // log.log("visiting url: ", target_url);
     await page.goto(target_url, { waitUntil: 'networkidle0' });
     await page.close();
     return tweets;

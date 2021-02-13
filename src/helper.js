@@ -1,3 +1,5 @@
+const log = require('./log');
+
 function rand_int(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -9,7 +11,7 @@ function measure_time(f) {
     return async function () {
         const start = new Date();
         const result = await f.apply(this, arguments);
-        console.log(`'${f.name}()' executed for`, new Date() - start, "ms");
+        log.log(`'${f.name}()' executed for`, new Date() - start, "ms");
         return result;
     }
 }
