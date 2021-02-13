@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node main.js 2>&1 | tee -a ./log/elonbot.log"
+    "start": "node ./src/main.js 2>&1 | tee -a ./log/elonbot.log"
   },
   "repository": {
     "type": "git",
