@@ -74,7 +74,7 @@ async function scrap_tweets(browser, user_screen_name) {
             user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
             if (!user_rest_id) {
                 stats.failed_scrap_count++;
-                log.log(`warning: nonexistent twitter account:`, user_screen_name, new Date());
+                log.log(`warning: nonexistent twitter account:`, user_screen_name);
                 //telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
             }
 

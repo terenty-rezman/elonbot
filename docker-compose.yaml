@@ -5,6 +5,7 @@ services:
                 volumes:
                         - ./log:/usr/src/elonbot/log:z
                         - ./auth:/usr/src/elonbot/auth:ro
+                        - /etc/localtime:/etc/localtime:ro
                 restart: always
                 init: true
                 cap_add:
