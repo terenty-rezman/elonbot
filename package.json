@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/terenty-rezman/elonbot#readme",
   "dependencies": {
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.5",
     "endent": "^2.0.1",
     "latinize": "^0.5.0",
     "puppeteer": "^7.0.1",
