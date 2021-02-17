@@ -3,6 +3,8 @@ const telegram = require('./telegram');
 const stats = require('./stats');
 const { sleep } = require('./helper');
 const log = require('./log');
+const useProxy = require('puppeteer-page-proxy');
+const proxy = require('./proxy');
 
 let browser = null;
 
@@ -21,6 +23,8 @@ async function scrap_tweets(browser, user_screen_name) {
     let tweets = [];
     let user_rest_id = undefined;
 
+    const proxy_str = await proxy.next_ip();
+
     const resume_requests = () => {
         paused = false;
         abort_next = true;
@@ -38,10 +42,9 @@ async function scrap_tweets(browser, user_screen_name) {
     }
 
     const page = await browser.newPage();
-
     await page.setRequestInterception(true);
 
-    page.on('request', request => {
+    page.on('request', async (request) => {
         const url = new URL(request.url());
         const url_path = url.pathname;
 
@@ -59,7 +62,11 @@ async function scrap_tweets(browser, user_screen_name) {
         if (url_path.includes('UserByScreenName'))
             paused = true;
 
-        request.continue();
+        await useProxy(request, {
+            proxy: proxy_str,
+            timeout: 5000
+        });
+        //request.continue();
     });
 
     page.on('requestfinished', async (request) => {

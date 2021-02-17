@@ -6,6 +6,7 @@ const db = require("./db");
 const { measure_time, sleep, sleep_random, start_timer } = require("./helper");
 const stats = require("./stats");
 const log = require("./log");
+const proxy = require("./proxy");
 
 function filter_tweets_keywords(tweets, keywords) {
     return tweets.filter(([id, tweet]) => {
@@ -100,7 +101,7 @@ async function main() {
 
     try {
         await twitter.startup();
-        await telegram.startup();
+        //await telegram.startup();
         log.log(`online`);
 
         await bot_loop();
@@ -109,7 +110,7 @@ async function main() {
         log.log(err);
     }
     finally {
-        await telegram.shutdown();
+        //await telegram.shutdown();
         await twitter.shutdown();
     }
 }
