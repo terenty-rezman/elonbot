@@ -1,8 +1,10 @@
 const cheerio = require("cheerio");
 const axios = require("axios");
+const HttpsProxyAgent = require('https-proxy-agent');
 const log = require("./log");
 const helper = require("./helper");
 
+// regex to math ip:port as 'xxx.xxx.xxx.xxx:xxxxx'
 const RE_IP_PORT = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})/;
 
 let proxy_list = [];
@@ -29,14 +31,24 @@ async function get_proxy_list() {
         const response = await axios.get("https://free-proxy-list.net/");
         const $ = cheerio.load(response.data);
 
+        const proxylisttable = $('table#proxylisttable tbody').find('tr').each((i, tr) => {
+            const rows = $(tr).find('td');
+            const host = $(rows[0]).text();
+            const port = $(rows[1]).text();
+            const protocol = $(rows[6]).text() === 'yes' ? 'https' : 'http';
+
+            result_list.push({host, port, protocol});
+        });
+        /*
         const proxy_list_text = $("textarea.form-control").text();
         const proxy_list_array_raw = proxy_list_text.split("\n");
-
-        // regex to math ip:port as 'xxx.xxx.xxx.xxx:xxx'
 
         const filtered_proxy_array = proxy_list_array_raw.filter(entry => entry.match(RE_IP_PORT));
 
         result_list = filtered_proxy_array;
+        */
+
+        console.log(proxylisttable.length);
     }
     catch (err) {
         log.log("failed to get proxy list", err);
@@ -46,18 +58,18 @@ async function get_proxy_list() {
     }
 }
 
-async function is_alive_proxy(proxy_str, timeout) {
+async function is_alive_proxy({host, port, protocol}, timeout) {
     let result = false;
 
     try {
-        const [_, ip, port] = proxy_str.match(RE_IP_PORT);
-        const res = await axios.get('https://api.ipify.org?format=json', {
-            timeout,
-            proxy: {
-                host: ip,
-                port: port,
-            }
+        const agent = new HttpsProxyAgent({host, port, protocol});
+
+        const client = axios.create({
+            httpAgent: (protocol === 'http' && agent) || null,
+            httpsAgent: (protocol === 'https' && agent) || null,
         });
+
+        const res = await client.get('https://api.ipify.org?format=json');
         console.log(res.data);
         result = true;
     }
@@ -76,7 +88,7 @@ async function next_alive_poxy(proxy_list_iterator, per_proxy_timeout, total_tim
         const proxy = proxy_list_iterator.next().value;
 
         if (await is_alive_proxy(proxy, per_proxy_timeout))
-            return `http://${proxy}`;
+            return proxy;
         
         if (elapsed() > total_timeout)
             break;
