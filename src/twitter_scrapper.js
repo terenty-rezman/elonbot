@@ -23,7 +23,8 @@ async function scrap_tweets(browser, user_screen_name) {
     let tweets = [];
     let user_rest_id = undefined;
 
-    const proxy_str = await proxy.next_ip();
+    const proxy_info = await proxy.next_ip()
+    const proxy_str = `${proxy_info.protocol}://${proxy_info.host}:${proxy_info.port}`;
 
     const resume_requests = () => {
         paused = false;

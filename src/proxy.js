@@ -1,6 +1,7 @@
 const cheerio = require("cheerio");
 const axios = require("axios");
 const HttpsProxyAgent = require('https-proxy-agent');
+var HttpProxyAgent = require('http-proxy-agent');
 const log = require("./log");
 const helper = require("./helper");
 
@@ -62,14 +63,14 @@ async function is_alive_proxy({host, port, protocol}, timeout) {
     let result = false;
 
     try {
-        const agent = new HttpsProxyAgent({host, port, protocol});
+        const agent = new HttpsProxyAgent({host, port, protocol, rejectUnauthorized: false, timeout: 5000});
 
         const client = axios.create({
-            httpAgent: (protocol === 'http' && agent) || null,
-            httpsAgent: (protocol === 'https' && agent) || null,
+            httpsAgent: agent,
+            timeout: 5000
         });
 
-        const res = await client.get('https://api.ipify.org?format=json');
+        const res = await client.get('https://api.ipify.org?format=json', { timeout: 5000 });
         console.log(res.data);
         result = true;
     }
