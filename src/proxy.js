@@ -54,7 +54,6 @@ async function is_alive_proxy(proxy_str, timeout) {
         const res = await axios.get('https://api.ipify.org?format=json', {
             timeout,
             proxy: {
-                protocol: 'https',
                 host: ip,
                 port: port,
             }
@@ -73,10 +72,12 @@ async function is_alive_proxy(proxy_str, timeout) {
 async function next_alive_poxy(proxy_list_iterator, per_proxy_timeout, total_timeout) {
     const elapsed = helper.start_timer();
 
-    for (let proxy of proxy_list_iterator) {
+    while(true) {
+        const proxy = proxy_list_iterator.next().value;
+
         if (await is_alive_proxy(proxy, per_proxy_timeout))
             return `http://${proxy}`;
-
+        
         if (elapsed() > total_timeout)
             break;
     }
