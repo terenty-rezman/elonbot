@@ -62,12 +62,15 @@ async function get_proxy_list() {
 async function is_alive_proxy({host, port, protocol}, timeout) {
     let result = false;
 
+    // port = '80';
+    // host = '185.133.226.150';
+    // protocol = 'http';
+
     try {
         const agent = new HttpsProxyAgent({host, port, protocol, rejectUnauthorized: false, timeout: 5000});
 
         const client = axios.create({
-            httpsAgent: agent,
-            timeout: 5000
+            httpsAgent: agent
         });
 
         const res = await client.get('https://api.ipify.org?format=json', { timeout: 5000 });
@@ -82,7 +85,7 @@ async function is_alive_proxy({host, port, protocol}, timeout) {
     }
 }
 
-async function next_alive_poxy(proxy_list_iterator, per_proxy_timeout, total_timeout) {
+async function next_alive_poxy(proxy_list_iterator, per_proxy_timeout, total_timeout = 0) {
     const elapsed = helper.start_timer();
 
     while(true) {
@@ -91,7 +94,7 @@ async function next_alive_poxy(proxy_list_iterator, per_proxy_timeout, total_tim
         if (await is_alive_proxy(proxy, per_proxy_timeout))
             return proxy;
         
-        if (elapsed() > total_timeout)
+        if (total_timeout && (elapsed() > total_timeout))
             break;
     }
 
@@ -105,7 +108,7 @@ module.exports = {
             proxy_expired = true;
 
         if (proxy_list.length === 0 || proxy_expired) {
-            const new_proxy_list = await get_proxy_list();
+            const new_proxy_list = (await get_proxy_list()).filter(item => item.protocol === "https");
 
             if (new_proxy_list.length) {
                 proxy_list = new_proxy_list;
@@ -114,6 +117,6 @@ module.exports = {
             }
         }
 
-        return await next_alive_poxy(proxy_list_iterator, 5000, 50 * 5000);
+        return await next_alive_poxy(proxy_list_iterator, 5000);
     }
 }
