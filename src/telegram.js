@@ -33,7 +33,10 @@ const my_handleUpdates = function(updates) {
     const most_recent_updates = new Map();
 
     updates.forEach(update => {
-        most_recent_updates.set(update.message.chat.id, update.update_id);
+        const chat_id = update?.message?.chat?.id; // sometimes updates have no message?
+        const update_id = update.update_id;
+        if(chat_id && update_id)
+            most_recent_updates.set(update.message.chat.id, update.update_id);
     });
 
     const most_recent_ids = new Set(most_recent_updates.values());
