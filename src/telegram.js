@@ -23,6 +23,11 @@ const auth = (
 
 let bot = new telegraf.Telegraf(auth.token);
 
+bot.catch(err => {
+	log.log("telegram bot error: exit process", err);
+	process.exit(1); // use docker to restart the container
+});
+
 // monkeypatch handleUpdates with my own [could break with new Telegraf version]
 const original_handleUpdates = bot.handleUpdates;
 
@@ -75,7 +80,7 @@ bot.on('message', async (ctx) => {
 })
 
 module.exports.startup = function () {
-    return bot.launch({allowedUpdates: 'message'});
+        return bot.launch({allowedUpdates: 'message'});
 }
 
 module.exports.shutdown = function (reason = 'unspecified') {
