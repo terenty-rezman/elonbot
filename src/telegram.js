@@ -65,7 +65,7 @@ bot.on('message', async (ctx) => {
         case 'stat':
         case 'stats':
         case 'info':
-            ctx.telegram.sendMessage(ctx.message.chat.id, stats.report(), { parse_mode: 'HTML' });
+            ctx.telegram.sendMessage(ctx.message.chat.id, await stats.report(), { parse_mode: 'HTML' });
             break;
         default:
             ctx.telegram.sendMessage(ctx.message.chat.id, `online`);

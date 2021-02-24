@@ -1,4 +1,6 @@
-const { default: endent } = require("endent");
+const { default: endent } = require('endent');
+const axios = require('axios');
+const log = require('./log');
 
 module.exports = {
     scrap_count: 0, // scrap count for statistics
@@ -22,8 +24,19 @@ module.exports = {
         return `${days} days, ${hours} hours, ${mins} mins, ${secs} seconds`;
     },
 
-    report: function () {
-        return  endent`
+    report: async function () {
+        let ip;
+        try {
+            const res = await axios.get('https://api.ipify.org?format=json', { timeout: 5000 });
+            ip = res?.data?.ip;
+        }
+        catch(err) {
+            log.log(err);
+            ip = 'error';
+        }
+
+        return endent`
+            ip: <b>${ip}</b>
             uptime: <b>${this.uptime_str()}</b>
             scraps count: <b>${this.scrap_count}</b>
             failed scraps: <b>${this.failed_scrap_count}</b>

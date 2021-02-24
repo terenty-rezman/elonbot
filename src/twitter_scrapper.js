@@ -107,9 +107,16 @@ async function scrap_tweets(browser, user_screen_name) {
     });
 
     // log.log("visiting url: ", target_url);
-    await page.goto(target_url, { waitUntil: 'networkidle0' });
-    await page.close();
-    return tweets;
+    try {
+        await page.goto(target_url, { waitUntil: 'networkidle0' });
+    }
+    catch (err) {
+        log.log(err);
+    }
+    finally {
+        await page.close();
+        return tweets;
+    }
 }
 
 async function startup() {
