@@ -69,22 +69,23 @@ async function scrap_tweets(browser, user_screen_name) {
         // extract user_rest_id and resume requests
         if (url.includes('UserByScreenName')) {
             const response_body = await response.buffer();
-	    const json_str = response_body.toString('utf8');
+            const json_str = response_body.toString('utf8');
 
-	    try {
-		    user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
+            try {
+                user_rest_id = JSON.parse(json_str).data?.user?.rest_id;
 
-		    if (!user_rest_id) {
-			    stats.failed_scrap_count++;
-			    log.log(`warning: nonexistent twitter account:`, user_screen_name);
-			    //telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
-		    }
+                if (!user_rest_id) {
+                    stats.failed_scrap_count++;
+                    log.log(`warning: nonexistent twitter account:`, user_screen_name);
+                    //telegram.notify_admin(`nonexistent account: ${user_screen_name}`);
+                }
 
-		    resume_requests();
-	    }
-	    catch(err) {
-	    	log.log(`JSON response str: "${json_str}"\n`, err);
-	    }
+                resume_requests();
+            }
+            catch (err) {
+                log.log(`JSON response str: "${json_str}"\n`, err);
+                stats.failed_scrap_count++;
+            }
         }
 
         // extract tweets
@@ -146,4 +147,3 @@ module.exports = {
         return await scrap_tweets(browser, user_screen_name);
     }
 }
-
