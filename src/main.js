@@ -2,6 +2,7 @@ const scraplist = require("./scraplist");
 const latinize = require("latinize");
 const twitter = require("./twitter_scrapper");
 const telegram = require("./telegram");
+const { TelegramError } = require("telegraf");
 const db = require("./db");
 const { measure_time, sleep, sleep_random, start_timer } = require("./helper");
 const stats = require("./stats");
@@ -121,6 +122,14 @@ function cleanup() {
 
 // handle the unhandled
 process.on('unhandledRejection', function (err) {
+    // telegraf internal poll loop sometimes fails on 'getUpdates' (TelegramError 409) with bot instance becoming unusable
+    // it is possible to recreate bot instance and launch it again but we'll go with restarting the whole process
+    // (also did not find out a way to catch this exception properly)
+    if(err instanceof TelegramError) {
+        log.log("telegram bot error: exit process", err);
+        process.exit(1); // use docker to restart the container
+    }
+
     log.log(err);
     stats.unhandled_exceptions_count++;
 });
