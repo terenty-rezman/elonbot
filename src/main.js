@@ -82,7 +82,7 @@ async function bot_loop() {
             }
 
             // restart browser periodically to prevent chrome from eating all the memory
-            if(browser_elapsed() > browser_restart_interval) {
+            if (browser_elapsed() > browser_restart_interval) {
                 await twitter.restart_browser();
                 browser_elapsed = start_timer();
             }
@@ -91,6 +91,9 @@ async function bot_loop() {
             await sleep(scrap_interval - scrap_elapsed());
         }
         catch (err) {
+            if (err instanceof twitter.BrowserLaunchError)
+                throw err;
+
             log.log(err);
         }
     }
@@ -107,6 +110,12 @@ async function main() {
         await bot_loop();
     }
     catch (err) {
+        // sometimes browser fails to launch, it's better to restart the whole process then
+        if (err instanceof twitter.BrowserLaunchError) {
+            log.log("browser launch error: exit process");
+            process.exit(2); // use docker to restart the container
+        }
+
         log.log(err);
     }
     finally {
@@ -125,7 +134,7 @@ process.on('unhandledRejection', function (err) {
     // telegraf internal poll loop sometimes fails on 'getUpdates' (TelegramError 409) with bot instance becoming unusable
     // it is possible to recreate bot instance and launch it again but we'll go with restarting the whole process
     // (also did not find out a way to catch this exception properly)
-    if(err instanceof TelegramError) {
+    if (err instanceof TelegramError) {
         log.log("telegram bot error: exit process", err);
         process.exit(1); // use docker to restart the container
     }

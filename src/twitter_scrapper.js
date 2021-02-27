@@ -4,6 +4,8 @@ const stats = require('./stats');
 const { sleep } = require('./helper');
 const log = require('./log');
 
+class BrowserLaunchError extends Error { };
+
 let browser = null;
 
 // tweeter page makes 2 requests (that are interesting for us) to download tweets:
@@ -123,11 +125,17 @@ async function startup() {
     if (browser)
         throw ("error: twitter_scrapper already initialized !! ");
 
-    browser = await puppeteer.launch({
-        headless: true,
-        /* allows nonsecure HTTP protocol and ignore any HTTPS-related errors */
-        ignoreHTTPSErrors: true
-    });
+    try {
+        browser = await puppeteer.launch({
+            headless: true,
+            /* allows nonsecure HTTP protocol and ignore any HTTPS-related errors */
+            ignoreHTTPSErrors: true
+        });
+    }
+    catch (err) {
+        log.log("browser launch error: ", err);
+        throw new BrowserLaunchError();
+    }
 
     return browser;
 }
@@ -139,6 +147,7 @@ function shutdown() {
 module.exports = {
     startup,
     shutdown,
+    BrowserLaunchError,
 
     restart_browser: async function () {
         await shutdown();
