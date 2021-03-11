@@ -5,6 +5,7 @@ services:
                 volumes:
                         - ./log:/usr/src/elonbot/log:z
                         - ./auth:/usr/src/elonbot/auth:ro
+                        - ./scraplist.json:/usr/src/elonbot/scraplist.json:ro
                 restart: always
                 init: true
                 cap_add:
