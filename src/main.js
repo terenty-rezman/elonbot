@@ -139,7 +139,7 @@ process.on('unhandledRejection', function (err) {
         process.exit(1); // use docker to restart the container
     }
 
-    log.log(err);
+    log.log("unhandled exception:", err);
     stats.unhandled_exceptions_count++;
 });
 
